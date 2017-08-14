@@ -29,11 +29,16 @@ public class ConnectionPool {
         maxIdleTime = TimeUnit.SECONDS.toMillis(30);
     }
     public ConnectionPool(String connectionString, Properties properties) {
+        this(connectionString,properties,30);
+    }
+
+    public ConnectionPool(String connectionString, Properties properties, int idleTime){
         this.connectionString = connectionString;
         props = properties;
         connections = Collections.synchronizedList(Lists.<ConnectionHandler>newArrayList());
-        maxIdleTime = TimeUnit.SECONDS.toMillis(30);
+        maxIdleTime = TimeUnit.SECONDS.toMillis(idleTime);
     }
+
     public void setMaxIdleTime(long maxTime) {
         maxIdleTime = maxTime;
     }

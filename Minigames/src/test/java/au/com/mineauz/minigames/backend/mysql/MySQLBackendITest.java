@@ -5,14 +5,16 @@ import au.com.mineauz.minigames.backend.ConnectionHandler;
 import org.bukkit.configuration.ConfigurationSection;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 
 /**
  * Created for the AddstarMC Project.
@@ -22,9 +24,10 @@ public class MySQLBackendITest {
 
     ConfigurationSection config;
     Logger log;
+    MySQLBackend backend;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         TestUtilities utilities = new TestUtilities();
         log = utilities.getLogger();
         config = utilities.createTestConfig().getConfigurationSection("backend");
@@ -34,29 +37,70 @@ public class MySQLBackendITest {
         config.get("username", "games");
         config.get("password", "games");
         config.get("useSSL", "false");
+        backend = new MySQLBackend(log);
     }
 
     @Test
-    public void initializeTest() throws Exception {
-        MySQLBackend backend = new MySQLBackend(log);
-        assertTrue(backend.initialize(config,true));
-        Connection handler = backend.getPool().getConnection().getConnection();
-        assertTrue(handler.isValid(10));
-        backend.shutdown();
-        assertFalse(handler.isValid(10));
-        handler = backend.getPool().getConnection().getConnection();
-        assertTrue(handler.isValid(10));
-        PreparedStatement statement = handler.prepareStatement("SELECT 1 FROM `Players` LIMIT 0;");
-        assertTrue(statement.execute());
-        backend.clean();
-        assertFalse(handler.isValid(10));
+    public void initializeTest() {
+        assertTrue(backend.initialize(config,false));
         config.set("useSSL ", "true");
         config.set("password", "password");
         assertFalse(backend.initialize(config,false));
+        backend.shutdown();
+    }
+
+    @Test
+    public void handlerIsValid(){
+        backend.initialize(config,true);
+        try{
+            assertTrue(backend.getPool().getConnection().getConnection().isValid(10));
+        }catch (SQLException e){
+            e.printStackTrace();
+            fail("SQL Exception thrown on handler test ");
+        }
+        backend.shutdown();
+    }
+    @Test
+    public void testDbAccess(){
+        backend.shutdown();
+        backend.initialize(config,false);
+        try {
+            Connection con = backend.getPool().getConnection().getConnection();
+            PreparedStatement statement = con.prepareStatement("SELECT 1 FROM `Players` LIMIT 0;");
+            assertTrue(statement.execute());
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        backend.shutdown();
+    }
+
+    @Test
+    public void clean(){
+        backend.initialize(config,false);
+        backend.getPool().setMaxIdleTime(0);
+        try{
+            Connection con = backend.getPool().getConnection().getConnection();
+            assertTrue(con.isValid(10));
+            backend.clean();
+            assertTrue(con.isClosed());
+        }catch (SQLException e){
+            fail(e.getMessage());
+        }
+        backend.shutdown();
+    }
+
+
+    @Rule public ExpectedException exception = ExpectedException.none();
+    @Test
+    public void connectionInvalid() throws SQLException{
+            backend.shutdown();
+            exception.expect(SQLException.class);
+            backend.getPool().getConnection().getConnection().isValid(10);
+            fail("SQLException not thrown ..connection true");
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown(){
+        backend.shutdown();
     }
-
 }
