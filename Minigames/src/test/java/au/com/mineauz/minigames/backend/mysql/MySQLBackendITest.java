@@ -42,10 +42,12 @@ public class MySQLBackendITest {
 
     @Test
     public void initializeTest() {
-        assertTrue(backend.initialize(config,false));
+        assertTrue(backend.initialize(config,true));
         config.set("useSSL ", "true");
+        String old = config.getString("password");
         config.set("password", "password");
         assertFalse(backend.initialize(config,false));
+        config.set("password",old);
         backend.shutdown();
     }
 
@@ -62,7 +64,6 @@ public class MySQLBackendITest {
     }
     @Test
     public void testDbAccess(){
-        backend.shutdown();
         backend.initialize(config,false);
         try {
             Connection con = backend.getPool().getConnection().getConnection();
@@ -70,8 +71,10 @@ public class MySQLBackendITest {
             assertTrue(statement.execute());
         }catch (SQLException e){
             e.printStackTrace();
+            fail("Error");
+        }finally {
+            backend.shutdown();
         }
-        backend.shutdown();
     }
 
     @Test
@@ -82,7 +85,7 @@ public class MySQLBackendITest {
             Connection con = backend.getPool().getConnection().getConnection();
             assertTrue(con.isValid(10));
             backend.clean();
-            assertTrue(con.isClosed());
+            assertTrue(con.isValid(10));
         }catch (SQLException e){
             fail(e.getMessage());
         }
@@ -92,11 +95,15 @@ public class MySQLBackendITest {
 
     @Rule public ExpectedException exception = ExpectedException.none();
     @Test
-    public void connectionInvalid() throws SQLException{
-            backend.shutdown();
-            exception.expect(SQLException.class);
-            backend.getPool().getConnection().getConnection().isValid(10);
-            fail("SQLException not thrown ..connection true");
+    public void connectionInvalid() throws SQLException {
+        exception.expect(SQLException.class);
+        backend.initialize(config,false);
+        backend.getPool().setMaxIdleTime(0);
+        Connection con = backend.getPool().getConnection().getConnection();
+        backend.clean();
+        backend.shutdown();
+        backend.getPool().getConnection(false).getConnection().isValid(10);
+        fail("SQLException not thrown ..connection true");
     }
 
     @After

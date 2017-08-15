@@ -13,7 +13,7 @@
   <properties>
     <mysql.user>root</mysql.user>
     <mysql.password>password</mysql.password>
-    <mysql.database>test_games</mysql.database>
+    <mysql.database>games</mysql.database>
     <mysql.host>localhost</mysql.host>
     <mysql.port>3306</mysql.port>
   </properties>

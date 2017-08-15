@@ -68,11 +68,13 @@ public class ConnectionPool {
             }
         }
     }
-    
+    public ConnectionHandler getConnection() throws SQLException {
+        return getConnection(true);
+    }
     /**
      * @return Returns a free connection from the pool of connections. Creates a new connection if there are none available
      */
-    public ConnectionHandler getConnection() throws SQLException {
+    public ConnectionHandler getConnection(boolean createNew) throws SQLException {
         synchronized(connections) {
             for (int i = 0; i < connections.size(); ++i) {
                 ConnectionHandler con = connections.get(i);
@@ -100,9 +102,11 @@ public class ConnectionPool {
                 }
             }
         }
-        
-        // Create a new connection
-        return createConnection();
+        if(createNew){
+            return createConnection();
+        }else{
+            throw new SQLException("No Connections available");
+        }
     }
     
     private ConnectionHandler createConnection() throws SQLException {

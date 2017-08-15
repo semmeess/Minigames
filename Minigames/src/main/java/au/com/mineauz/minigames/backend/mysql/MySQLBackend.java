@@ -59,7 +59,7 @@ public class MySQLBackend extends Backend {
 			
 			// Create the pool
 			String url = String.format("jdbc:mysql://%s/%s", 
-					config.getString("host", "localhost:3306"), database);
+					config.getString("host", "localhost:3307"), database);
             if(debug)logger.info("URL: " + url);
 
             Properties properties = new Properties();
