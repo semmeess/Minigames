@@ -5,6 +5,7 @@ import java.util.List;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.bukkit.Bukkit;
 
 import au.com.mineauz.minigames.MinigamePlayer;
 import au.com.mineauz.minigames.minigame.Minigame;
@@ -39,6 +40,8 @@ public class EndMinigameEvent extends Event implements Cancellable{
 	}
 
 	public Minigame getMinigame() {
+		Bukkit.getSever().dispatchCommand(getServer().getConsoleSender, "sync console all broadcast TDM is starting!");
+		Bukkit.getSever().dispatchCommand(getServer().getConsoleSender, "sync console all broadcast §bJoin now with §d/server §bto win 20 tokens!");
 		return mgm;
 	}
 
